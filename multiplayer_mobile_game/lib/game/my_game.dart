@@ -3,10 +3,12 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import '../components/arena.dart';
 import '../components/player.dart';
+import '../components/attack_joystick.dart';
 
 class MyGame extends FlameGame {
   Player? player;
-  JoystickComponent? joystick;
+  JoystickComponent? moveJoystick;
+  AttackJoystick? attackJoystick;
 
   static const double wallThickness = 40;
 
@@ -22,7 +24,7 @@ class MyGame extends FlameGame {
     );
     add(player!);
 
-    joystick = JoystickComponent(
+    moveJoystick = JoystickComponent(
       knob: CircleComponent(
         radius: 30,
         paint: Paint()..color = const Color(0xAAFFFFFF),
@@ -33,14 +35,19 @@ class MyGame extends FlameGame {
       ),
       margin: const EdgeInsets.only(left: 40, bottom: 60),
     );
-    add(joystick!);
+    add(moveJoystick!);
+
+    attackJoystick = AttackJoystick(
+      onAttack: (direction) => player?.attack(direction),
+    );
+    add(attackJoystick!);
   }
 
   @override
   void update(double dt) {
     super.update(dt);
 
-    player?.velocity = joystick?.relativeDelta ?? Vector2.zero();
+    player?.velocity = moveJoystick?.relativeDelta ?? Vector2.zero();
 
     final margin = wallThickness + 16.0;
     player?.position.clamp(
