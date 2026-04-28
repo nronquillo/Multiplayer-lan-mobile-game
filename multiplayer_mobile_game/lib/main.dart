@@ -1,14 +1,14 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'game/my_game.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   final game = MyGame();
-  runApp(GameWidget(game: game));
-}
-
-class MyGame extends FlameGame {
-  @override
-  Future<void> onLoad() async {
-    //game loads here
-  }
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(body: GameWidget(game: game)),
+    ),
+  );
 }
