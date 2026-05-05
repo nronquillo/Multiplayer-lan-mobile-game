@@ -1,40 +1,54 @@
 import 'package:flame/components.dart';
+import 'package:flame/collisions.dart';
 import 'package:flutter/material.dart';
 import 'sword.dart';
-import 'health_bar.dart';
-import 'package:flame/collisions.dart';
 
-class Player extends RectangleComponent {
+class Player extends PositionComponent with CollisionCallbacks {
   static const double speed = 300;
   static const double playerSize = 50;
 
   final int playerId;
   final void Function(int loserId)? onDeath;
+  final Color color;
   Vector2 velocity = Vector2.zero();
   bool _isAttacking = false;
   double hp = 100;
   double maxHp = 100;
-  late final HealthBar _healthBar;
+
+  late final RectangleComponent _background;
+  late final RectangleComponent _fill;
 
   Player({
     required this.playerId,
     required Vector2 position,
-    required Color color,
+    required this.color,
     this.onDeath,
   }) : super(
          position: position,
          size: Vector2.all(playerSize),
          anchor: Anchor.center,
-         paint: Paint()..color = color,
        );
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
+    // Dark background — full player size
+    _background = RectangleComponent(
+      size: Vector2.all(playerSize),
+      paint: Paint()..color = color.withOpacity(0.5),
+    );
+    add(_background);
+
+    // Colored fill — starts full, drains downward
+    _fill = RectangleComponent(
+      position: Vector2.zero(),
+      size: Vector2.all(playerSize),
+      paint: Paint()..color = color,
+    );
+    add(_fill);
+
     add(RectangleHitbox());
-    _healthBar = HealthBar(maxHp: maxHp, currentHp: hp);
-    add(_healthBar);
   }
 
   @override
@@ -63,11 +77,19 @@ class Player extends RectangleComponent {
 
   void takeDamage(double amount) {
     hp = (hp - amount).clamp(0, maxHp);
-    _healthBar.updateHp(hp);
+    _updateFill();
 
     if (hp <= 0) {
       onDeath?.call(playerId);
     }
+  }
+
+  void _updateFill() {
+    final ratio = hp / maxHp;
+    final fillHeight = playerSize * ratio;
+
+    _fill.size = Vector2(playerSize, fillHeight);
+    _fill.position = Vector2(0, playerSize - fillHeight);
   }
 
   bool get isDead => hp <= 0;

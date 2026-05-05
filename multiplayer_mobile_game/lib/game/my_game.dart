@@ -44,7 +44,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
     player2 = Player(
       playerId: 2,
-      position: Vector2(worldSize.x * 0.85, worldSize.y * 0.2),
+      position: Vector2(worldSize.x * 0.15, worldSize.y * 0.8),
       color: const Color(0xFFCC3300),
       onDeath: (id) => _handleDeath(id),
     );
