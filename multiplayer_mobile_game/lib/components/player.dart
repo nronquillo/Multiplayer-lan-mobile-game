@@ -31,6 +31,8 @@ class Player extends RectangleComponent {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+
+    add(RectangleHitbox());
     _healthBar = HealthBar(maxHp: maxHp, currentHp: hp);
     add(_healthBar);
   }
