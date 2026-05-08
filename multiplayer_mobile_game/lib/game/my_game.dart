@@ -4,6 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import '../components/arena.dart';
 import '../components/attack_joystick.dart';
+import '../components/minion_spawner.dart';
 import '../components/player.dart';
 
 class MyGame extends FlameGame with HasCollisionDetection {
@@ -20,6 +21,12 @@ class MyGame extends FlameGame with HasCollisionDetection {
   late final Vector2 worldSize;
   bool gameOver = false;
 
+  int _wave = 1;
+  int player1Gold = 0;
+  int player2Gold = 0;
+
+  int getCurrentWave() => _wave;
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
@@ -34,6 +41,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
     world.add(Arena(gameSize: worldSize));
 
+    // Players
     player1 = Player(
       playerId: 1,
       position: Vector2(worldSize.x * 0.15, worldSize.y * 0.8),
@@ -50,8 +58,32 @@ class MyGame extends FlameGame with HasCollisionDetection {
     );
     world.add(player2!);
 
+    // Spawners — 4 camps around the arena
+    final spawnerPositions = [
+      Vector2(worldSize.x * 0.3, worldSize.y * 0.3),
+      Vector2(worldSize.x * 0.7, worldSize.y * 0.3),
+      Vector2(worldSize.x * 0.3, worldSize.y * 0.7),
+      Vector2(worldSize.x * 0.7, worldSize.y * 0.7),
+    ];
+
+    for (final pos in spawnerPositions) {
+      world.add(
+        MinionSpawner(
+          spawnCenter: pos,
+          spawnRadius: 80,
+          getCurrentWave: getCurrentWave,
+          onMinionKilled: (gold) {
+            // For now just track total — later split by who got the kill
+            player1Gold += gold;
+          },
+        ),
+      );
+    }
+
+    // Camera follows P1
     camera.follow(player1!);
 
+    // P1 controls
     moveJoystick1 = JoystickComponent(
       knob: CircleComponent(
         radius: 30,
@@ -71,6 +103,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
     );
     camera.viewport.add(attackJoystick1!);
 
+    // P2 controls
     moveJoystick2 = JoystickComponent(
       knob: CircleComponent(
         radius: 30,
@@ -96,11 +129,8 @@ class MyGame extends FlameGame with HasCollisionDetection {
   void _handleDeath(int loserId) {
     if (gameOver) return;
     gameOver = true;
-
     final winnerId = loserId == 1 ? 2 : 1;
     overlays.add('winner_$winnerId');
-
-    // Stop movement
     player1?.velocity = Vector2.zero();
     player2?.velocity = Vector2.zero();
   }

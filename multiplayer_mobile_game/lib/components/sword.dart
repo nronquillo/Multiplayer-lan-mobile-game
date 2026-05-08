@@ -3,6 +3,7 @@ import 'package:flame/collisions.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'player.dart';
+import 'minion.dart';
 
 class Sword extends RectangleComponent with CollisionCallbacks {
   static const double swingDuration = 0.3;
@@ -47,7 +48,12 @@ class Sword extends RectangleComponent with CollisionCallbacks {
 
     if (other is Player && other.playerId != ownerPlayerId) {
       other.takeDamage(damage);
-      removeFromParent(); // sword disappears on hit
+      removeFromParent();
+    }
+
+    if (other is Minion) {
+      other.takeDamage(damage);
+      removeFromParent();
     }
   }
 }
