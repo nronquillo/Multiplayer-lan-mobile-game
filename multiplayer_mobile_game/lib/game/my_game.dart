@@ -10,6 +10,8 @@ import '../components/player.dart';
 class MyGame extends FlameGame with HasCollisionDetection {
   Player? player1;
   Player? player2;
+  late TextComponent _goldText1;
+  late TextComponent _goldText2;
   JoystickComponent? moveJoystick1;
   JoystickComponent? moveJoystick2;
   AttackJoystick? attackJoystick1;
@@ -73,8 +75,16 @@ class MyGame extends FlameGame with HasCollisionDetection {
           spawnRadius: 80,
           getCurrentWave: getCurrentWave,
           onMinionKilled: (gold) {
-            // For now just track total — later split by who got the kill
-            player1Gold += gold;
+            // Closest player gets the gold
+            final d1 = player1?.position.distanceTo(pos) ?? double.infinity;
+            final d2 = player2?.position.distanceTo(pos) ?? double.infinity;
+            if (d1 < d2) {
+              player1Gold += gold;
+              _goldText1.text = '🪙 $player1Gold';
+            } else {
+              player2Gold += gold;
+              _goldText2.text = '$player2Gold 🪙';
+            }
           },
         ),
       );
@@ -124,6 +134,37 @@ class MyGame extends FlameGame with HasCollisionDetection {
       backgroundPaint: Paint()..color = const Color(0x55CC3300),
     );
     camera.viewport.add(attackJoystick2!);
+
+    _goldText1 = TextComponent(
+      text: '🪙 0',
+      position: Vector2(20, 20),
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          color: Color(0xFFFFCC44),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          shadows: [Shadow(color: Color(0xFFFF6600), blurRadius: 8)],
+        ),
+      ),
+    );
+    camera.viewport.add(_goldText1);
+
+    _goldText2 = TextComponent(
+      text: '0 🪙',
+      position: Vector2(20, 20),
+      anchor: Anchor.topRight,
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          color: Color(0xFFCC3300),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          shadows: [Shadow(color: Color(0xFFFF6600), blurRadius: 8)],
+        ),
+      ),
+    );
+    // Anchor to top right of viewport
+    _goldText2.position = Vector2(size.x - 20, 20);
+    camera.viewport.add(_goldText2);
   }
 
   void _handleDeath(int loserId) {
