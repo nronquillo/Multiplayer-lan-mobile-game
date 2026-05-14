@@ -46,9 +46,12 @@ class Sword extends RectangleComponent with CollisionCallbacks {
   ) {
     super.onCollisionStart(intersectionPoints, other);
 
-    if (other is Player && other.playerId != ownerPlayerId) {
-      other.takeDamage(damage);
-      removeFromParent();
+    if (other is Player) {
+      // Minion sword hits any player, player sword only hits opponent
+      if (ownerPlayerId == -1 || other.playerId != ownerPlayerId) {
+        other.takeDamage(damage);
+        removeFromParent();
+      }
     }
 
     if (other is Minion) {

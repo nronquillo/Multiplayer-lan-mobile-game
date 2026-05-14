@@ -3,14 +3,17 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'player.dart';
+import 'sword.dart';
 
-class Minion extends RectangleComponent with CollisionCallbacks {
+class Minion extends PositionComponent with CollisionCallbacks {
   static const double minionSize = 30;
   static const double wanderSpeed = 60;
   static const double chargeSpeed = 140;
   static const double aggroRange = 150;
-  static const double damage = 10;
-  static const double damageInterval = 1.0;
+  static const double attackRange = 55;
+  static const double attackCooldown = 1.2;
+
+  static const Color minionColor = Color(0xFFAA4400);
 
   final int wave;
   final void Function(Minion minion) onDeath;
@@ -22,7 +25,7 @@ class Minion extends RectangleComponent with CollisionCallbacks {
 
   Vector2 _wanderTarget = Vector2.zero();
   double _wanderTimer = 0;
-  double _damageTimer = 0;
+  double _attackTimer = 0;
   bool _isCharging = false;
 
   final Random _random = Random();
@@ -32,30 +35,25 @@ class Minion extends RectangleComponent with CollisionCallbacks {
         position: position,
         size: Vector2.all(minionSize),
         anchor: Anchor.center,
-        paint: Paint()..color = const Color(0xFFAA4400),
       );
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
-    // HP scales with wave — 1 hit wave 1, more each wave
     _maxHp = wave * 20.0;
     _hp = _maxHp;
 
-    // HP bar background
     _background = RectangleComponent(
-      position: Vector2(-minionSize / 2 + minionSize / 2 - 20, -14),
-      size: Vector2(40, 5),
-      paint: Paint()..color = const Color(0xFF333333),
+      size: Vector2.all(minionSize),
+      paint: Paint()..color = minionColor.withOpacity(0.2),
     );
     add(_background);
 
-    // HP bar fill
     _fill = RectangleComponent(
-      position: Vector2(-minionSize / 2 + minionSize / 2 - 20, -14),
-      size: Vector2(40, 5),
-      paint: Paint()..color = const Color(0xFFCC4400),
+      position: Vector2.zero(),
+      size: Vector2.all(minionSize),
+      paint: Paint()..color = minionColor,
     );
     add(_fill);
 
@@ -80,7 +78,7 @@ class Minion extends RectangleComponent with CollisionCallbacks {
     for (final component in parent?.children ?? []) {
       if (component is Player) {
         final dist = position.distanceTo(component.position);
-        if (dist < dist && dist < nearestDist) {
+        if (dist < nearestDist) {
           nearestDist = dist;
           nearest = component;
         }
@@ -89,40 +87,51 @@ class Minion extends RectangleComponent with CollisionCallbacks {
     return nearest;
   }
 
+  void _swingAt(Player target) {
+    final dir = (target.position - position).normalized();
+    parent?.add(
+      Sword(
+        ownerPlayerId: -1, // -1 = minion owned, hits any player
+        playerPosition: position,
+        direction: dir,
+      ),
+    );
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
+
+    _attackTimer += dt;
 
     final nearestPlayer = _findNearestPlayer();
 
     if (nearestPlayer != null) {
       final dist = position.distanceTo(nearestPlayer.position);
       _isCharging = dist < aggroRange;
+
+      if (_isCharging) {
+        if (dist > attackRange) {
+          // Move toward player but stop at attack range
+          final dir = (nearestPlayer.position - position).normalized();
+          position += dir * chargeSpeed * dt;
+        } else {
+          // In attack range — swing on cooldown
+          if (_attackTimer >= attackCooldown) {
+            _attackTimer = 0;
+            _swingAt(nearestPlayer);
+          }
+        }
+      }
     } else {
       _isCharging = false;
     }
 
-    if (_isCharging && nearestPlayer != null) {
-      // Charge toward player
-      final dir = (nearestPlayer.position - position).normalized();
-      position += dir * chargeSpeed * dt;
-
-      // Deal damage if touching
-      _damageTimer += dt;
-      if (_damageTimer >= damageInterval) {
-        _damageTimer = 0;
-        final dist = position.distanceTo(nearestPlayer.position);
-        if (dist < minionSize + 25) {
-          nearestPlayer.takeDamage(damage);
-        }
-      }
-    } else {
-      // Wander
+    if (!_isCharging) {
       _wanderTimer -= dt;
       if (_wanderTimer <= 0) {
         _pickNewWanderTarget();
       }
-
       final dir = (_wanderTarget - position);
       if (dir.length > 5) {
         position += dir.normalized() * wanderSpeed * dt;
@@ -132,12 +141,18 @@ class Minion extends RectangleComponent with CollisionCallbacks {
 
   void takeDamage(double amount) {
     _hp = (_hp - amount).clamp(0, _maxHp);
-    _fill.size = Vector2(40 * (_hp / _maxHp), 5);
-
+    _updateFill();
     if (_hp <= 0) {
       onDeath(this);
       removeFromParent();
     }
+  }
+
+  void _updateFill() {
+    final ratio = _hp / _maxHp;
+    final fillHeight = minionSize * ratio;
+    _fill.size = Vector2(minionSize, fillHeight);
+    _fill.position = Vector2(0, minionSize - fillHeight);
   }
 
   @override
