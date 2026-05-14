@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'sword.dart';
 
 class Player extends PositionComponent with CollisionCallbacks {
-  static const double speed = 300;
   static const double playerSize = 50;
 
   final int playerId;
   final void Function(int loserId)? onDeath;
   final Color color;
+  final double baseSpeed;
+  final double baseDamage;
+
   Vector2 velocity = Vector2.zero();
   bool _isAttacking = false;
   double hp = 100;
@@ -22,25 +24,29 @@ class Player extends PositionComponent with CollisionCallbacks {
     required this.playerId,
     required Vector2 position,
     required this.color,
+    required double baseHp,
+    required this.baseSpeed,
+    required this.baseDamage,
     this.onDeath,
   }) : super(
          position: position,
          size: Vector2.all(playerSize),
          anchor: Anchor.center,
-       );
+       ) {
+    hp = baseHp;
+    maxHp = baseHp;
+  }
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
-    // Dark background — full player size
     _background = RectangleComponent(
       size: Vector2.all(playerSize),
-      paint: Paint()..color = color.withOpacity(0.5),
+      paint: Paint()..color = color.withOpacity(0.2),
     );
     add(_background);
 
-    // Colored fill — starts full, drains downward
     _fill = RectangleComponent(
       position: Vector2.zero(),
       size: Vector2.all(playerSize),
@@ -54,7 +60,7 @@ class Player extends PositionComponent with CollisionCallbacks {
   @override
   void update(double dt) {
     super.update(dt);
-    position += velocity * speed * dt;
+    position += velocity * baseSpeed * dt;
   }
 
   void attack(Vector2 direction) {
@@ -66,6 +72,7 @@ class Player extends PositionComponent with CollisionCallbacks {
         ownerPlayerId: playerId,
         playerPosition: position,
         direction: direction,
+        damage: baseDamage,
       ),
     );
 
@@ -87,7 +94,6 @@ class Player extends PositionComponent with CollisionCallbacks {
   void _updateFill() {
     final ratio = hp / maxHp;
     final fillHeight = playerSize * ratio;
-
     _fill.size = Vector2(playerSize, fillHeight);
     _fill.position = Vector2(0, playerSize - fillHeight);
   }

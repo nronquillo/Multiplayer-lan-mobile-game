@@ -1,8 +1,10 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'game/my_game.dart';
+import 'models/player_class.dart';
+import 'screens/class_select_screen.dart';
 import 'screens/title_screen.dart';
-import 'screens/mode_select.dart';
+import 'screens/mode_select_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,20 +19,24 @@ class DungeonDuelApp extends StatefulWidget {
 }
 
 class _DungeonDuelAppState extends State<DungeonDuelApp> {
-  String _screen = 'title'; // title, mode_select, game
+  String _screen = 'title';
+  PlayerClass? _p1Class;
+  PlayerClass? _p2Class;
   MyGame? _game;
-
-  void _startGame() {
-    setState(() {
-      _game = MyGame();
-      _screen = 'game';
-    });
-  }
 
   void _restart() {
     setState(() {
-      _game = MyGame();
+      _p1Class = null;
+      _p2Class = null;
+      _game = null;
       _screen = 'title';
+    });
+  }
+
+  void _startGame() {
+    setState(() {
+      _game = MyGame(p1Class: _p1Class!, p2Class: _p2Class!);
+      _screen = 'game';
     });
   }
 
@@ -50,8 +56,24 @@ class _DungeonDuelAppState extends State<DungeonDuelApp> {
         );
       case 'mode_select':
         return ModeSelectScreen(
-          on1v1: _startGame,
+          on1v1: () => setState(() => _screen = 'class_select_p1'),
           onBack: () => setState(() => _screen = 'title'),
+        );
+      case 'class_select_p1':
+        return ClassSelectScreen(
+          playerNumber: 1,
+          onConfirm: (pc) => setState(() {
+            _p1Class = pc;
+            _screen = 'class_select_p2';
+          }),
+        );
+      case 'class_select_p2':
+        return ClassSelectScreen(
+          playerNumber: 2,
+          onConfirm: (pc) => setState(() {
+            _p2Class = pc;
+            _startGame();
+          }),
         );
       case 'game':
         return GameWidget(
@@ -86,7 +108,6 @@ class _DungeonDuelAppState extends State<DungeonDuelApp> {
                 color: color,
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
               ),
             ),
             const SizedBox(height: 24),

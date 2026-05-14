@@ -6,8 +6,12 @@ import '../components/arena.dart';
 import '../components/attack_joystick.dart';
 import '../components/minion_spawner.dart';
 import '../components/player.dart';
+import '../models/player_class.dart';
 
 class MyGame extends FlameGame with HasCollisionDetection {
+  final PlayerClass p1Class;
+  final PlayerClass p2Class;
+  MyGame({required this.p1Class, required this.p2Class});
   Player? player1;
   Player? player2;
   late TextComponent _goldText1;
@@ -47,18 +51,22 @@ class MyGame extends FlameGame with HasCollisionDetection {
     player1 = Player(
       playerId: 1,
       position: Vector2(worldSize.x * 0.15, worldSize.y * 0.8),
-      color: const Color(0xFF00CC88),
+      color: Color(p1Class.color),
+      baseHp: p1Class.baseHp,
+      baseSpeed: p1Class.baseSpeed,
+      baseDamage: p1Class.baseDamage,
       onDeath: (id) => _handleDeath(id),
     );
-    world.add(player1!);
 
     player2 = Player(
       playerId: 2,
       position: Vector2(worldSize.x * 0.15, worldSize.y * 0.8),
-      color: const Color(0xFFCC3300),
+      color: Color(p2Class.color),
+      baseHp: p2Class.baseHp,
+      baseSpeed: p2Class.baseSpeed,
+      baseDamage: p2Class.baseDamage,
       onDeath: (id) => _handleDeath(id),
     );
-    world.add(player2!);
 
     // Spawners — 4 camps around the arena
     final spawnerPositions = [

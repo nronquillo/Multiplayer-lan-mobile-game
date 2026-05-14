@@ -7,7 +7,7 @@ import 'minion.dart';
 
 class Sword extends RectangleComponent with CollisionCallbacks {
   static const double swingDuration = 0.3;
-  static const double damage = 20;
+  final double damage;
 
   final int ownerPlayerId;
   double _timer = 0;
@@ -16,6 +16,7 @@ class Sword extends RectangleComponent with CollisionCallbacks {
     required this.ownerPlayerId,
     required Vector2 playerPosition,
     required Vector2 direction,
+    this.damage = 20, // default fallback
   }) : super(
          position: playerPosition + direction * 30,
          size: Vector2(44, 16),
