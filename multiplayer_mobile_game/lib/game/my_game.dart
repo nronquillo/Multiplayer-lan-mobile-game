@@ -11,9 +11,15 @@ import '../models/player_class.dart';
 class MyGame extends FlameGame with HasCollisionDetection {
   final PlayerClass p1Class;
   final PlayerClass p2Class;
-  MyGame({required this.p1Class, required this.p2Class});
+  final bool splitScreen;
+  MyGame({
+    required this.p1Class,
+    required this.p2Class,
+    this.splitScreen = false,
+  });
   Player? player1;
   Player? player2;
+
   late TextComponent _goldText1;
   late TextComponent _goldText2;
   JoystickComponent? moveJoystick1;
@@ -57,7 +63,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
       baseDamage: p1Class.baseDamage,
       onDeath: (id) => _handleDeath(id),
     );
-
+    world.add(player1!);
     player2 = Player(
       playerId: 2,
       position: Vector2(worldSize.x * 0.15, worldSize.y * 0.8),
@@ -67,7 +73,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
       baseDamage: p2Class.baseDamage,
       onDeath: (id) => _handleDeath(id),
     );
-
+    world.add(player2!);
     // Spawners — 4 camps around the arena
     final spawnerPositions = [
       Vector2(worldSize.x * 0.3, worldSize.y * 0.3),

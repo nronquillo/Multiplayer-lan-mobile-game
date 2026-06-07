@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 class ModeSelectScreen extends StatelessWidget {
   final VoidCallback on1v1;
+  final VoidCallback onSplitScreen;
   final VoidCallback onBack;
 
   const ModeSelectScreen({
     super.key,
     required this.on1v1,
+    required this.onSplitScreen,
     required this.onBack,
   });
 
@@ -30,7 +32,7 @@ class ModeSelectScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   const Text(
                     'SELECT MODE',
                     style: TextStyle(
@@ -43,21 +45,28 @@ class ModeSelectScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
                   _buildMenuButton(
                     label: '1V1',
                     subtitle: 'Local Duel',
                     onTap: on1v1,
                     enabled: true,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
+                  _buildMenuButton(
+                    label: 'SPLIT SCREEN',
+                    subtitle: 'Same Device',
+                    onTap: onSplitScreen,
+                    enabled: true,
+                  ),
+                  const SizedBox(height: 10),
                   _buildMenuButton(
                     label: '2V2',
                     subtitle: 'Coming Soon',
                     onTap: null,
                     enabled: false,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   _buildMenuButton(
                     label: 'SETTINGS',
                     subtitle: 'Coming Soon',
@@ -120,6 +129,8 @@ class ModeSelectScreen extends StatelessWidget {
           children: [
             Text(
               label,
+              maxLines: 1,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,

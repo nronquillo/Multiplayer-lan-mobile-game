@@ -40,6 +40,13 @@ class _DungeonDuelAppState extends State<DungeonDuelApp> {
     });
   }
 
+  void _startSplitGame() {
+    setState(() {
+      _game = MyGame(p1Class: _p1Class!, p2Class: _p2Class!, splitScreen: true);
+      _screen = 'game';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -57,6 +64,8 @@ class _DungeonDuelAppState extends State<DungeonDuelApp> {
       case 'mode_select':
         return ModeSelectScreen(
           on1v1: () => setState(() => _screen = 'class_select_p1'),
+          onSplitScreen: () =>
+              setState(() => _screen = 'class_select_p1_split'),
           onBack: () => setState(() => _screen = 'title'),
         );
       case 'class_select_p1':
@@ -73,6 +82,22 @@ class _DungeonDuelAppState extends State<DungeonDuelApp> {
           onConfirm: (pc) => setState(() {
             _p2Class = pc;
             _startGame();
+          }),
+        );
+      case 'class_select_p1_split':
+        return ClassSelectScreen(
+          playerNumber: 1,
+          onConfirm: (pc) => setState(() {
+            _p1Class = pc;
+            _screen = 'class_select_p2_split';
+          }),
+        );
+      case 'class_select_p2_split':
+        return ClassSelectScreen(
+          playerNumber: 2,
+          onConfirm: (pc) => setState(() {
+            _p2Class = pc;
+            _startSplitGame();
           }),
         );
       case 'game':
